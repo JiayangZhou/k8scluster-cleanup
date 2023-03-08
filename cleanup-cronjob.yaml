@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cluster-cleanup-cronjob
+  namespace: kube-system
+  labels:
+    app: cluster-cleanup-cronjob
+spec:
+  # Cron job executes at 08:00 on Sunday
+  schedule: "0 8 * * 0"
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 10
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cleanup-cronjob-sa
+          restartPolicy: OnFailure
+          volumes:
+          - name: bash-script
+            secret:
+              secretName: cluster-cleanup-secret
+          containers:
+          - name: cluster-cleanup
+            image: alpine:3.16
+            imagePullPolicy: Always
+            command: ["/bin/sh", "-c" ]
+            args:
+              - apk update; apk upgrade; apk add bash; apk add curl; curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"; mv kubectl bin/kubectl; chmod +x bin/kubectl; bash /mnt/script/cleanup.bash $POD_STATUS $MAX_DAYS $PROTECTED_NAMESPACES;
+            volumeMounts:
+            - name: bash-script
+              mountPath: /mnt/script
+            env:
+              - name: MAX_DAYS
+                # maximum retain days to be 10 days
+                value: 10
+              - name: POD_STATUS
+                value: "Error,Failed,ImagePullBackOff"
+              - name: PROTECTED_NAMESPACES
+                value: "kube-system,default"
