@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: cluster-cleanup-cronjob
+  name: cleanup-cronjob
   namespace: kube-system
   labels:
-    app: cluster-cleanup-cronjob
+    app: cleanup-cronjob
 spec:
   # Cron job executes at 08:00 on Sunday
   schedule: "0 8 * * 0"
@@ -19,9 +19,9 @@ spec:
           volumes:
           - name: bash-script
             secret:
-              secretName: cluster-cleanup-secret
+              secretName: cleanup-secret
           containers:
-          - name: cluster-cleanup
+          - name: cleanup-container
             image: alpine:3.16
             imagePullPolicy: Always
             command: ["/bin/sh", "-c" ]
@@ -37,4 +37,4 @@ spec:
               - name: POD_STATUS
                 value: "Error,Failed,ImagePullBackOff"
               - name: PROTECTED_NAMESPACES
-                value: "kube-system,default"
+                value: "kube-system"
