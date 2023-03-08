@@ -33,7 +33,7 @@ spec:
             env:
               - name: MAX_DAYS
                 # maximum retain days to be 10 days
-                value: 10
+                value: "10"
               - name: POD_STATUS
                 value: "Error,Failed,ImagePullBackOff"
               - name: PROTECTED_NAMESPACES
